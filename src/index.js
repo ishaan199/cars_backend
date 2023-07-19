@@ -1,5 +1,6 @@
 import express from 'express';
 import route from './routes/route.js';
+import { connectToDB } from './database/db.js';
 
 const app = express();
 app.use(express.json());

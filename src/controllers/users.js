@@ -1,5 +1,6 @@
 import UserModel from "../models/userModel.js";
 import CarModel from "../models/carModel.js";
+import DealershipModel from '../models/dealershipModel.js';
 import { connectToDB } from "../database/db.js";
 import {
   checkEmail,
@@ -7,6 +8,7 @@ import {
 } from "../middlewares/validations/validators.js";
 import axios from "axios";
 import bcrypt from "bcrypt";
+import { ObjectId } from "mongodb";
 
 export async function createUser(req, res) {
   try {
@@ -81,8 +83,91 @@ export async function viewCars (req,res) {
 
 export async function delearshipCars (req,res) {
     try{
-        
+        const db = await connectToDB();
+        const dealerCollection = db.collection("dealership");
+        const carsCollection = db.collection("cars");
+
+        const dealerIdParams = req.params.dealerId;
+        const dealerData = await dealerCollection.findOne(ObjectId(dealerIdParams));
+        const carsId = dealerData.cars;
+        const carsData = [];
+        for(let i of carsId){
+            const data = await carsCollection.findOne(ObjectId(i));
+            carsData.push(data);
+        }
+        console.log(carsData);
+        res.status(201).send({status:true,data:carsData})
     }catch(error){
         return res.status(500).send({status:false,msg:"Server",error:error.message});
     };
 };
+
+
+export async function showDealershipAccToCarid (req,res){
+    try{
+        const db = await connectToDB();
+        const dealerCollection = db.collection("dealership");
+        const newDealership = await dealerCollection.find().toArray();
+        const carId = req.params.carsId;
+        const data = await newDealership.filter((i)=>{return i.cars.includes(carId)});
+        
+        const result = {
+          dealership_email: data[0].dealership_email,
+          dealership_name: data[0].dealership_name,
+          dealership_location: data[0].dealership_location,
+          dealership_info: data[0].dealership_info,
+          cars: data[0].cars,
+          deals: data[0].deals,
+          sold_vehicles: data[0].sold_vehicles,
+        };
+        res.status(201).send({status:true,data:result});
+    }catch(error){
+        res.status(500).send({status:false,msg:"Server",error:error.message});
+    };
+};
+
+export async function getAllSoldCars (req,res) {
+    try{
+        const db = await connectToDB();
+        const collection = db.collection("sold_vehicles");
+        const soldCars = await collection.find().toArray();
+        console.log(soldCars)
+    }catch(error){
+        return res.status(500).send({status:false,msg:"Server",error:error.message})
+    }
+}
+
+export async function dealsAcctoCarId(req,res){
+    try{
+        const db = await connectToDB();
+        const collection = db.collection("deals");
+        const carId = req.params.carId;
+        const dealsList = await collection.findOne({car_id:ObjectId(carId)});
+        res.status(201).send({status:true,data:dealsList});
+    }catch(error){
+        return res.status(500).send({status:false,msg:"Server",error:error.message});
+    };
+};
+
+export async function dealsAccToDealership(req,res){
+    try{
+        const db = await connectToDB();
+        const collection = db.collection("dealership");
+        const dealCollection = db.collection("deals");
+
+        let dealershipId = req.params.dealerId;
+        let data = await collection.findOne({_id:ObjectId(dealershipId)});
+        let dealer = data.deals;
+        // console.log(dealer)
+        const dealList = [];
+        for(let i of dealer){
+            let data = await dealCollection.findOne(ObjectId(i))
+            dealList.push(data);
+        }
+        res.status(201).send({status:false,data:dealList});
+       
+    }catch(error){
+        res.status(500).send({status:false,msg:"Server",error:error.message})
+    }
+}
+// aaa1fac9061c00794509f146bbd8c055;
