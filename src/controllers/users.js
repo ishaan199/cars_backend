@@ -8,6 +8,7 @@ import {
 } from "../middlewares/validations/validators.js";
 import axios from "axios";
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
 import { ObjectId } from "mongodb";
 
 export async function createUser(req, res) {
@@ -168,6 +169,33 @@ export async function dealsAccToDealership(req,res){
        
     }catch(error){
         res.status(500).send({status:false,msg:"Server",error:error.message})
+    };
+};
+
+export async function userLogin (req,res){
+    try{
+        const db = await connectToDB();
+        const dealerCollection = db.collection('user');
+        const userData = req.body;
+        const {email, password} = userData;
+
+        const checkEmail = await dealerCollection.findOne({user_email:email});
+        if(!checkEmail){
+            return res.status(400).send({status:false,msg:"This email is not registered."});
+        };
+        let decryptPass = await bcrypt.compare(password,checkEmail.password);
+        if(!decryptPass){
+            return res.status(400).send({status:false,msg:"Password not matched"})
+        };
+
+        const token = jwt.sign({
+            userId:checkEmail._id,
+            email:checkEmail.user_email
+        },"cars");
+
+        res.status(201).send({status:true,token:token})
+    }catch(error){
+        return res.status(500).send({status:false,msg:"Server",error:error.message});
     }
 }
 // aaa1fac9061c00794509f146bbd8c055;
