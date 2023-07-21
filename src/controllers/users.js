@@ -196,6 +196,42 @@ export async function userLogin (req,res){
         res.status(201).send({status:true,token:token})
     }catch(error){
         return res.status(500).send({status:false,msg:"Server",error:error.message});
-    }
-}
-// aaa1fac9061c00794509f146bbd8c055;
+    };
+};
+
+export async function addSoldVehiclesToUserByDeals(req,res){
+    try{
+        const db = await connectToDB();
+        const userCollection = db.collection('user');
+        const dealCollection = db.collection('deals');
+        const carCollection = db.collection('cars');
+
+        const userId = req.params.userId;
+        const dealsId = req.params.dealsId;
+
+        const userData = await userCollection.findOne({_id:ObjectId(userId)});
+        const dealsData = await dealCollection.findOne({_id:ObjectId(dealsId)});
+
+        if(!dealsData){
+            return res.status(400).send({status:false,msg:"this is not valid"});
+        };
+
+        const carid = dealsData.car_id;
+        
+        const carData = await carCollection.findOne({_id:ObjectId(carid)});
+        
+        if(!carData){
+            return res.status(400).send({status:false,msg:'this car is not available right now'})
+        };
+
+        const checkUserData = await userCollection.findOne({_id:ObjectId(userId)});
+        console.log(checkUserData)
+        const sold_vehicles = checkUserData.vehicle_info;
+       
+        const result = await userCollection.findOneAndUpdate({_id:ObjectId(userId)},{$set:{vehicle_info:[...sold_vehicles,carData._id]}});
+        res.status(201).send({status:true,data:result});
+
+    }catch(error){
+        return res.satatus(500).send({status:false,msg:"Server",error:error.message})
+    };
+};

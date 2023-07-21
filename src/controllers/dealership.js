@@ -195,3 +195,36 @@ export async function dealershipLogin (req,res){
         return res.status(500).send({status:false,msg:"Server",error:error.message});
     };
 };
+
+export async function addSoldVehiclesToDealershipByDeals(req,res){
+    try{
+        const db = await connectToDB();
+        const dealsCollection = db.collection('deals');
+        const dealerCollection = db.collection('dealership');
+        const carCollection = db.collection('cars');
+
+        const dealId = req.params.dealsId;
+        const dealerId = req.params.dealerId;
+        const checkDealData = await dealsCollection.findOne({_id:ObjectId(dealId)});
+
+        if(!checkDealData){
+            return res.status(400).send({status:false,msg:"This deal is not valid"});
+        };
+
+        const carId = checkDealData.car_id;
+        
+        const checkCard_id = await carCollection.findOne({_id:ObjectId(carId)});
+        if(!checkCard_id){
+            return res.status(400).send({status:false,msg:"The car is not available."})
+        };
+
+        const dealershipData = await dealerCollection.findOne({_id:ObjectId(dealerId)});
+        const soldVehicles = dealershipData.sold_vehicles;
+
+        const result = await dealerCollection.findOneAndUpdate({_id:ObjectId(dealerId)},{$set:{sold_vehicles:[...soldVehicles,checkCard_id._id]}},{new:true});
+        
+        return res.status(201).send({status:true,data:soldVehicles});
+    }catch(error){
+        return res.status(400).send({status:false,msg:"Server",error:error.message});
+    };
+};

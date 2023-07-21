@@ -2,11 +2,11 @@ import express from 'express';
 
 const router = express.Router();
 
-import {createUser,viewCars,delearshipCars,showDealershipAccToCarid, getAllSoldCars, dealsAcctoCarId, dealsAccToDealership, userLogin} from "../controllers/users.js";
+import {createUser,viewCars,delearshipCars,showDealershipAccToCarid, getAllSoldCars, dealsAcctoCarId, dealsAccToDealership, userLogin, addSoldVehiclesToUserByDeals} from "../controllers/users.js";
 import { createCars } from '../controllers/cars.js';
 import { sold_vehicles } from '../controllers/vehicles.js';
 import { deals } from '../controllers/deal.js';
-import { addCarsToDealership, addDealsToDealership, dealership, dealershipLogin, viewAllCarsDealership, viewDealsByDealership, viewSoldCarsDealership, viewSoldVehiclesDealership } from '../controllers/dealership.js';
+import { addCarsToDealership, addDealsToDealership, addSoldVehiclesToDealershipByDeals, dealership, dealershipLogin, viewAllCarsDealership, viewDealsByDealership, viewSoldCarsDealership, viewSoldVehiclesDealership } from '../controllers/dealership.js';
 import {userAuthentication} from '../middlewares/auth/userAuthentication.js';
 import {dealerAuthentication} from '../middlewares/auth/dealerAuthentication.js';
 //Post
@@ -33,6 +33,8 @@ router.get('/view/sold/vehicles/:dealerId',dealerAuthentication,viewSoldVehicles
 //Put
 router.put('/add/cars/:carId/dealership/:dealerId',addCarsToDealership);
 router.put('/add/deals/:dealsId/dealership/:dealerId',addDealsToDealership);
+router.put('/sold/vehicls/deals/:dealsId/dealership/:dealerId',dealerAuthentication,addSoldVehiclesToDealershipByDeals);
+router.put('/sold/vehicles/deals/:dealsId/user/:userId',userAuthentication,addSoldVehiclesToUserByDeals);
 
 
 export default router;

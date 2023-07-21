@@ -6,7 +6,7 @@ class User  {
         this.user_location = data.user_location;
         this.user_info = data.user_info;
         this.password = data.password;
-        this.vehicle_info = [data.vehicle_info];
+        this.vehicle_info = data.vehicle_info;
     };
 };
 
